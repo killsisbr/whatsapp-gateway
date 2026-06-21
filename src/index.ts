@@ -22,6 +22,7 @@ app.use(express.static(PUBLIC_DIR));
 app.get("/scan", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 app.get("/tenants", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "tenants.html")));
 app.get("/stats", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "stats.html")));
+app.get("/login", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
 app.get("/tenants/:id/scan", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "tenant-scan.html")));
 
 // --- Persistência ---

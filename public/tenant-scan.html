@@ -121,6 +121,15 @@
   </div>
 
   <script>
+    // Auth check
+    (function() {
+      const token = localStorage.getItem('wha_token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+    })();
+
     const tenantId = window.location.pathname.split('/')[2];
     document.getElementById('tenant-info').textContent = 'Tenant: ' + tenantId;
 
@@ -167,10 +176,15 @@
     }
 
     async function pollQR() {
+      const token = localStorage.getItem('wha_token');
       try {
         const [statusRes, qrRes] = await Promise.all([
-          fetch(`/api/tenants/${tenantId}/status`),
-          fetch(`/api/tenants/${tenantId}/qr`)
+          fetch(`/api/tenants/${tenantId}/status`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch(`/api/tenants/${tenantId}/qr`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
         ]);
 
         const status = await statusRes.json();

@@ -104,8 +104,9 @@
     <header>
       <h1>📱 WhatsApp Gateway — Tenants</h1>
       <div class="header-actions">
+        <a href="/stats" class="btn btn-secondary" style="text-decoration:none;align-items:center;display:inline-flex;gap:0.4rem;padding:0.6rem 1.2rem;align-self:center;">📊 Estatísticas</a>
         <button class="btn btn-primary" onclick="openNewModal()">+ Novo Tenant</button>
-        <button class="btn btn-secondary" onclick="loadTenants()">↻ Atualizar</button>
+        <button class="btn btn-secondary" onclick="logout()" style="margin-left:0.5rem">🚪 Sair</button>
       </div>
     </header>
 
@@ -135,6 +136,15 @@
   </div>
 
   <script>
+    // Auth check
+    (function() {
+      const token = localStorage.getItem('wha_token');
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+    })();
+
     async function loadHealth() {
       const res = await fetch('/health');
       const h = await res.json();
@@ -143,7 +153,9 @@
     }
 
     async function loadTenants() {
-      const res = await fetch('/api/tenants');
+      const res = await fetch('/api/tenants', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('wha_token')}` }
+      });
       const tenants = await res.json();
       const list = document.getElementById('tenants-list');
 
@@ -206,6 +218,12 @@
       await fetch(`/api/tenants/${id}`, { method: 'DELETE' });
       loadTenants();
       loadHealth();
+    }
+
+    function logout() {
+      localStorage.removeItem('wha_token');
+      localStorage.removeItem('wha_user');
+      window.location.href = '/login';
     }
 
     function openNewModal() {
