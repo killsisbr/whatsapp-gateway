@@ -1,0 +1,16 @@
+[
+  {
+    "id": "e0c584fa-dad4-4ce6-982b-efb88eff2952",
+    "userId": "46791ced-8d70-4a1e-ad1f-a5cca793a90a",
+    "name": "Tenant Persist",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-21T19:10:42.546Z"
+  }
+]

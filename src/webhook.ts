@@ -72,4 +72,31 @@ export class WebhookManager {
   clearFailedDeliveries() {
     this.failedDeliveries = [];
   }
+
+  // Direct dispatch to a single URL (used by tenant webhooks)
+  async dispatchToUrl(url: string, event: WebhookEvent, data: unknown, tenantId: string): Promise<boolean> {
+    const payload: WebhookPayload = {
+      event,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, tenantId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return true;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      this.failedDeliveries.push({
+        webhookId: `tenant:${tenantId}`,
+        payload,
+        error,
+        timestamp: new Date().toISOString(),
+      });
+      return false;
+    }
+  }
 }

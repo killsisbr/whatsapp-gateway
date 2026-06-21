@@ -7,6 +7,7 @@ import { WhatsAppManager } from "./whatsapp.js";
 import { AuthManager, authRoutes, authMiddleware } from "./auth.js";
 import { tenantRoutes } from "./routes/tenants.js";
 import { webhookRoutes } from "./routes/webhooks.js";
+import { Store } from "./store.js";
 import "./types.js";
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -20,16 +21,34 @@ app.use(express.static(PUBLIC_DIR));
 
 app.get("/scan", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 app.get("/tenants", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "tenants.html")));
+app.get("/stats", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "stats.html")));
 app.get("/tenants/:id/scan", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "tenant-scan.html")));
 
+// --- Persistência ---
+const store = new Store();
+
 // --- Auth ---
-const am = new AuthManager();
+const am = new AuthManager(store);
 app.use("/api/auth", authRoutes(am));
 
 // --- Tenant system ---
-const tm = new TenantManager();
+const tm = new TenantManager(store);
 const wh = tm.getWebhookManager();
 const mw = authMiddleware(am);
+
+// API Key middleware — validates X-API-Key header if present
+function apiKeyOrAuth(req: any, res: any, next: any) {
+  const apiKey = req.headers["x-api-key"] as string;
+  if (apiKey) {
+    const result = tm.validateApiKey(apiKey);
+    if (result) {
+      req.userId = result.tenantId; // reuse same field for simplicity
+      return next();
+    }
+    return res.status(401).json({ error: "Invalid API key" });
+  }
+  return mw(req, res, next);
+}
 
 // Tenant API (auth-protected)
 app.post("/api/tenants/:id/start", mw, async (req, res) => {
@@ -60,17 +79,20 @@ app.get("/api/tenants/:id/status", mw, (req, res) => {
   res.json({ connected: wa.connected, state: wa.state, phone: wa.phone, lastSeen: wa.lastSeen, qrPending: wa.qrPending });
 });
 
-app.post("/api/tenants/:id/send", mw, async (req, res) => {
-  const tenant = tm.getForUser((req as any).userId as string, req.params.id);
+app.post("/api/tenants/:id/send", apiKeyOrAuth, async (req, res) => {
+  const tenantId = req.params.id;
+  const tenant = tm.get(tenantId);
   if (!tenant) return res.status(404).json({ error: "tenant not found" });
-  const wa = tm.getWhatsAppManager(req.params.id);
+  const wa = tm.getWhatsAppManager(tenantId);
   if (!wa) return res.status(404).json({ error: "tenant not initialized" });
   const { to, text } = req.body;
   if (!to || !text) return res.status(400).json({ error: "to and text required" });
   try {
     const result = await wa.sendMessage(to, text);
+    tm.incMessageSent(tenantId);
     res.json({ success: true, messageId: result });
   } catch (err: any) {
+    tm.incMessageFailed(tenantId);
     res.status(503).json({ error: err.message });
   }
 });
@@ -118,20 +140,39 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, tenants: tm.count(), uptime: process.uptime() });
 });
 
+// --- Stats ---
+app.get("/api/tenants/:id/stats", authMiddleware(am), (req, res) => {
+  const tenantId = req.params.id;
+  const tenant = tm.getForUser((req as any).userId as string, tenantId);
+  if (!tenant) return res.status(404).json({ error: "not found" });
+  res.json({
+    messagesSent: tenant.messagesSent,
+    messagesReceived: tenant.messagesReceived,
+    messagesFailed: tenant.messagesFailed,
+    qrScans: tenant.qrScans,
+    lastConnectedAt: tenant.lastConnectedAt,
+    lastDisconnectedAt: tenant.lastDisconnectedAt,
+    state: tenant.state,
+    phone: tenant.phone,
+  });
+});
+
 function createTenantWa(tenantId: string) {
   const wa = new WhatsAppManager(`session/${tenantId}`);
-  wa.on("qr", () => tm.dispatchToTenant(tenantId, "qr", { message: "New QR" }));
+  wa.on("qr", () => { tm.incQrScan(tenantId); tm.dispatchToTenant(tenantId, "qr", { message: "New QR" }); });
   wa.on("connected", (phone) => {
     const t = tm.get(tenantId);
     if (t) { t.connected = true; t.state = "connected"; t.phone = phone; t.lastSeen = new Date(); }
+    tm.markConnected(tenantId);
     tm.dispatchToTenant(tenantId, "status", { connected: true, phone });
   });
   wa.on("disconnected", (reason) => {
     const t = tm.get(tenantId);
     if (t) { t.connected = false; t.state = "disconnected"; }
+    tm.markDisconnected(tenantId);
     tm.dispatchToTenant(tenantId, "disconnect", { reason });
   });
-  wa.on("message", (msg) => tm.dispatchToTenant(tenantId, "message", msg));
+  wa.on("message", (msg) => { tm.incMessageReceived(tenantId); tm.dispatchToTenant(tenantId, "message", msg); });
   tm.setWhatsAppManager(tenantId, wa);
   return wa;
 }

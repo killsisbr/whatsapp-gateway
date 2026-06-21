@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>WhatsApp Gateway — Estatísticas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    h1 { font-size: 1.5rem; color: #f9fafb; }
+    .back { color: #3b82f6; text-decoration: none; font-size: 0.9rem; }
+    .back:hover { text-decoration: underline; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.25rem; text-align: center; }
+    .stat-card .val { font-size: 2rem; font-weight: 700; color: #3b82f6; }
+    .stat-card .lbl { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
+    .section { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .section h2 { font-size: 1rem; color: #94a3b8; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 0.5rem 0.75rem; border-bottom: 1px solid #334155; }
+    td { padding: 0.75rem; font-size: 0.875rem; border-bottom: 1px solid #1e293b; }
+    tr:last-child td { border-bottom: none; }
+    .mono { font-family: monospace; font-size: 0.8rem; color: #64748b; }
+    .state-connected { color: #34d399; }
+    .state-disconnected { color: #64748b; }
+    .state-qr_ready { color: #fbbf24; }
+    .empty { text-align: center; color: #64748b; padding: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Estatísticas — WhatsApp Gateway</h1>
+      <a href="/tenants" class="back">← Tenants</a>
+    </header>
+
+    <div class="summary" id="summary">
+      <div class="stat-card"><div class="val" id="total-sent">-</div><div class="lbl">📤 Enviados</div></div>
+      <div class="stat-card"><div class="val" id="total-received">-</div><div class="lbl">📥 Recebidos</div></div>
+      <div class="stat-card"><div class="val" id="total-failed">-</div><div class="lbl">✗ Falhas</div></div>
+      <div class="stat-card"><div class="val" id="total-qr">-</div><div class="lbl">📷 QR Scans</div></div>
+    </div>
+
+    <div class="section">
+      <h2>Tenants</h2>
+      <div id="tenants-table"></div>
+    </div>
+  </div>
+
+  <script>
+    async function init() {
+      const res = await fetch('/api/tenants');
+      const tenants = await res.json();
+
+      let totalSent = 0, totalRecv = 0, totalFail = 0, totalQr = 0;
+
+      if (!tenants.length) {
+        document.getElementById('tenants-table').innerHTML = '<div class="empty">Nenhum tenant</div>';
+        return;
+      }
+
+      const rows = await Promise.all(tenants.map(async t => {
+        const sr = await fetch(`/api/tenants/${t.id}/stats`);
+        const s = await sr.json();
+        totalSent += s.messagesSent || 0;
+        totalRecv += s.messagesReceived || 0;
+        totalFail += s.messagesFailed || 0;
+        totalQr += s.qrScans || 0;
+        const lastConn = s.lastConnectedAt ? new Date(s.lastConnectedAt).toLocaleString('pt-BR') : '—';
+        const lastDisc = s.lastDisconnectedAt ? new Date(s.lastDisconnectedAt).toLocaleString('pt-BR') : '—';
+        return `<tr>
+          <td><strong>${t.name}</strong><br><span class="mono">${t.id.slice(0,8)}...</span></td>
+          <td class="state-${t.state}">${t.state}</td>
+          <td>${t.phone || '—'}</td>
+          <td>${s.messagesSent}</td>
+          <td>${s.messagesReceived}</td>
+          <td style="color:${s.messagesFailed>0?'#f87171':'inherit'}">${s.messagesFailed}</td>
+          <td>${s.qrScans}</td>
+          <td class="mono">${lastConn}</td>
+          <td class="mono">${lastDisc}</td>
+        </tr>`;
+      }));
+
+      document.getElementById('tenants-table').innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Tenant</th><th>Estado</th><th>Telefone</th>
+              <th>📤 Env</th><th>📥 Rec</th><th>✗ Falhas</th>
+              <th>📷 QR</th><th>Última Conexão</th><th>Última Desconexão</th>
+            </tr>
+          </thead>
+          <tbody>${rows.join('')}</tbody>
+        </table>`;
+
+      document.getElementById('total-sent').textContent = totalSent;
+      document.getElementById('total-received').textContent = totalRecv;
+      document.getElementById('total-failed').textContent = totalFail;
+      document.getElementById('total-qr').textContent = totalQr;
+    }
+
+    init();
+  </script>
+</body>
+</html>

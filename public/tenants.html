@@ -161,6 +161,7 @@
               ID: ${t.id.slice(0,8)}... · Criado: ${new Date(t.createdAt).toLocaleString('pt-BR')}
             </div>
             ${t.phone ? `<div class="tenant-phone">✓ ${t.phone}</div>` : ''}
+            <div class="tenant-stats" id="stats-${t.id}" style="font-size:0.75rem;color:#6b7280;margin-top:4px;"></div>
           </div>
           <div class="tenant-actions">
             <a href="/tenants/${t.id}/scan" class="btn btn-secondary">📱 Scan QR</a>
@@ -169,6 +170,17 @@
           </div>
         </div>
       `).join('');
+
+      // fetch stats async (non-blocking)
+      tenants.forEach(t => {
+        fetch(`/api/tenants/${t.id}/stats`)
+          .then(r => r.json())
+          .then(s => {
+            document.getElementById('stats-' + t.id).innerHTML =
+              `📤${s.messagesSent||0} 📥${s.messagesReceived||0} ✗${s.messagesFailed||0} 📷${s.qrScans||0}`;
+          })
+          .catch(() => {});
+      });
     }
 
     async function createTenant() {

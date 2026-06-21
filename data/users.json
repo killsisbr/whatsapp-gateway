@@ -1,0 +1,9 @@
+[
+  {
+    "id": "46791ced-8d70-4a1e-ad1f-a5cca793a90a",
+    "name": "Persist Test",
+    "email": "persist@test.com",
+    "passwordHash": "MTIzNDU2",
+    "createdAt": "2026-06-21T19:10:19.887Z"
+  }
+]

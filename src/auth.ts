@@ -1,6 +1,7 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
+import { Store, StoredUser } from "./store.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "whatsapp-gateway-secret-change-me";
 
@@ -15,6 +16,29 @@ export interface User {
 export class AuthManager {
   private users = new Map<string, User>();
   private byEmail = new Map<string, string>(); // email → userId
+  private store: Store;
+
+  constructor(store?: Store) {
+    this.store = store || new Store();
+    this.loadFromStore();
+  }
+
+  private loadFromStore() {
+    const stored = this.store.loadUsers();
+    for (const u of stored) {
+      const user: User = { ...u, createdAt: new Date(u.createdAt) };
+      this.users.set(user.id, user);
+      this.byEmail.set(user.email, user.id);
+    }
+  }
+
+  private saveToStore() {
+    const users: StoredUser[] = Array.from(this.users.values()).map(u => ({
+      ...u,
+      createdAt: u.createdAt.toISOString(),
+    }));
+    this.store.saveUsers(users);
+  }
 
   // Simple in-memory password hash (use bcrypt in production)
   private hash(password: string): string {
@@ -40,6 +64,7 @@ export class AuthManager {
     };
     this.users.set(id, user);
     this.byEmail.set(email, id);
+    this.saveToStore();
 
     const token = jwt.sign({ userId: id }, JWT_SECRET, { expiresIn: "30d" });
     const { passwordHash: _, ...userPublic } = user;
