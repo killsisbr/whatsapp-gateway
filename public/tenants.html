@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Gateway — Tenants</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0e17;
+      color: #e0e6ed;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    h1 { font-size: 1.75rem; color: #f9fafb; }
+    .header-actions { display: flex; gap: 0.75rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-secondary { background: #1f2937; color: #e0e6ed; border: 1px solid #374151; }
+    .btn-secondary:hover { background: #374151; }
+    .btn-danger { background: #7f1d1d; color: #fca5a5; }
+    .btn-danger:hover { background: #991b1b; }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .tenant-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .tenant-status.connected { background: #34d399; box-shadow: 0 0 8px #34d399; }
+    .tenant-status.qr_ready { background: #fbbf24; }
+    .tenant-status.connecting { background: #60a5fa; animation: pulse 1.5s ease-in-out infinite; }
+    .tenant-status.disconnected { background: #4b5563; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .tenant-info { flex: 1; }
+    .tenant-name { font-weight: 700; font-size: 1rem; color: #f3f4f6; }
+    .tenant-meta { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
+    .tenant-phone { color: #34d399; font-weight: 600; font-size: 0.875rem; }
+    .tenant-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #6b7280;
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .modal { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 2rem; width: 100%; max-width: 400px; }
+    .modal h2 { margin-bottom: 1.5rem; color: #f9fafb; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.4rem; }
+    .form-group input { width: 100%; padding: 0.6rem 0.8rem; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #e0e6ed; font-size: 0.9rem; }
+    .form-group input:focus { outline: none; border-color: #3b82f6; }
+    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+    .health-bar {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+    }
+    .health-bar span { color: #34d399; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📱 WhatsApp Gateway — Tenants</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openNewModal()">+ Novo Tenant</button>
+        <button class="btn btn-secondary" onclick="loadTenants()">↻ Atualizar</button>
+      </div>
+    </header>
+
+    <div class="health-bar" id="health-bar">Carregando...</div>
+
+    <div id="tenants-list">
+      <div class="empty">
+        <div class="empty-icon">📡</div>
+        <p>Carregando tenants...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Tenant Modal -->
+  <div id="modal-backdrop" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>➕ Novo Tenant</h2>
+      <div class="form-group">
+        <label>Nome do Cliente</label>
+        <input type="text" id="tenant-name" placeholder="Ex: Cliente Fulano" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="createTenant()">Criar Tenant</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadHealth() {
+      const res = await fetch('/health');
+      const h = await res.json();
+      document.getElementById('health-bar').innerHTML =
+        `Gateway: <span>online</span> | Tenants: <span>${h.tenants}</span> | Uptime: <span>${Math.floor(h.uptime)}s</span>`;
+    }
+
+    async function loadTenants() {
+      const res = await fetch('/api/tenants');
+      const tenants = await res.json();
+      const list = document.getElementById('tenants-list');
+
+      if (!tenants.length) {
+        list.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><p>Nenhum tenant ainda. Clique em "+ Novo Tenant" para começar.</p></div>';
+        return;
+      }
+
+      list.innerHTML = tenants.map(t => `
+        <div class="card">
+          <div class="tenant-status ${t.state}" title="${t.state}"></div>
+          <div class="tenant-info">
+            <div class="tenant-name">${t.name}</div>
+            <div class="tenant-meta">
+              ID: ${t.id.slice(0,8)}... · Criado: ${new Date(t.createdAt).toLocaleString('pt-BR')}
+            </div>
+            ${t.phone ? `<div class="tenant-phone">✓ ${t.phone}</div>` : ''}
+          </div>
+          <div class="tenant-actions">
+            <a href="/tenants/${t.id}/scan" class="btn btn-secondary">📱 Scan QR</a>
+            ${t.state !== 'connected' ? `<button class="btn btn-primary" onclick="startTenant('${t.id}')">▶ Iniciar</button>` : ''}
+            <button class="btn btn-danger" onclick="deleteTenant('${t.id}')">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function createTenant() {
+      const name = document.getElementById('tenant-name').value.trim();
+      if (!name) return alert('Digite um nome');
+      await fetch('/api/tenants/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      closeModal();
+      loadTenants();
+      loadHealth();
+    }
+
+    async function startTenant(id) {
+      await fetch(`/api/tenants/${id}/start`, { method: 'POST' });
+      setTimeout(() => loadTenants(), 1000);
+    }
+
+    async function deleteTenant(id) {
+      if (!confirm('Remover este tenant? A sessão WhatsApp será apagada.')) return;
+      await fetch(`/api/tenants/${id}`, { method: 'DELETE' });
+      loadTenants();
+      loadHealth();
+    }
+
+    function openNewModal() {
+      document.getElementById('tenant-name').value = '';
+      document.getElementById('modal-backdrop').style.display = 'flex';
+      document.getElementById('tenant-name').focus();
+    }
+
+    function closeModal() {
+      document.getElementById('modal-backdrop').style.display = 'none';
+    }
+
+    // Init
+    loadTenants();
+    loadHealth();
+    setInterval(loadTenants, 10000);
+    setInterval(loadHealth, 5000);
+  </script>
+</body>
+</html>

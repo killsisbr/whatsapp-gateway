@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Gateway — Scan QR</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: #58a6ff;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #8b949e;
+      font-size: 0.9rem;
+      margin-top: -16px;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .qr-container {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .qr-container img {
+      display: block;
+      width: 280px;
+      height: 280px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #f0883e;
+      animation: pulse 1.5s infinite;
+    }
+
+    .dot.connected { background: #3fb950; animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .phone {
+      font-family: monospace;
+      color: #58a6ff;
+      font-size: 1.1rem;
+    }
+
+    .instructions {
+      color: #8b949e;
+      font-size: 0.8rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .instructions strong {
+      color: #e6edf3;
+    }
+
+    .api-status {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      color: #8b949e;
+    }
+
+    .api-status .ok { color: #3fb950; }
+    .api-status .error { color: #f85149; }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #2ea043; }
+    button:disabled { background: #484f58; cursor: not-allowed; }
+
+    #error-msg {
+      color: #f85149;
+      font-size: 0.85rem;
+      text-align: center;
+      max-width: 300px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="api-status" id="api-status">
+    Gateway: <span id="api-state">checking...</span>
+  </div>
+
+  <h1>WhatsApp Gateway</h1>
+  <p class="subtitle">Escaneie o QR Code com o WhatsApp</p>
+
+  <div class="card">
+    <div class="status">
+      <div class="dot" id="dot"></div>
+      <span id="status-text">Aguardando QR...</span>
+    </div>
+
+    <div class="qr-container" id="qr-container">
+      <img id="qr-image" src="" alt="QR Code" style="display:none">
+      <div id="qr-placeholder" style="width:280px;height:280px;display:flex;align-items:center;justify-content:center;color:#666;font-size:0.9rem;">
+        Carregando...
+      </div>
+    </div>
+
+    <div id="phone-display" class="phone" style="display:none"></div>
+
+    <p id="error-msg"></p>
+
+    <div class="buttons">
+      <button id="btn-refresh" onclick="fetchQR()">🔄 Atualizar QR</button>
+      <button id="btn-reload" onclick="location.reload()">🔁 Recarregar</button>
+    </div>
+
+    <p class="instructions">
+      <strong>WhatsApp:</strong> Configurações → Dispositivos vinculados → Linkar dispositivo<br>
+      Ou: Mais opções → Dispositivos vinculados → + → Linkar dispositivo
+    </p>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+    let pollInterval = null;
+
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API}/health`);
+        const data = await res.json();
+        document.getElementById('api-state').innerHTML = `<span class="ok">online (${data.state})</span>`;
+        return data;
+      } catch {
+        document.getElementById('api-state').innerHTML = `<span class="error">offline</span>`;
+        return null;
+      }
+    }
+
+    async function fetchQR() {
+      const img = document.getElementById('qr-image');
+      const placeholder = document.getElementById('qr-placeholder');
+      const dot = document.getElementById('dot');
+      const statusText = document.getElementById('status-text');
+      const phoneDisplay = document.getElementById('phone-display');
+      const errorMsg = document.getElementById('error-msg');
+
+      placeholder.textContent = 'Carregando...';
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+      errorMsg.style.display = 'none';
+
+      try {
+        const res = await fetch(`${API}/api/qr`);
+        const data = await res.json();
+
+        if (data.status === 'already_connected') {
+          // Already connected — no QR needed
+          placeholder.style.display = 'none';
+          img.style.display = 'none';
+          dot.classList.add('connected');
+          statusText.textContent = `Conectado`;
+          phoneDisplay.textContent = data.phone;
+          phoneDisplay.style.display = 'block';
+          document.getElementById('btn-refresh').disabled = true;
+          if (pollInterval) clearInterval(pollInterval);
+          return;
+        }
+
+        if (data.status === 'no_qr') {
+          placeholder.textContent = data.message || 'QR ainda não disponível. Tente em alguns segundos.';
+          return;
+        }
+
+        // QR ready
+        placeholder.style.display = 'none';
+        img.src = data.qr;
+        img.style.display = 'block';
+        statusText.textContent = 'QR disponível — escaneie em 60s';
+
+        // Countdown
+        const expires = data.expires;
+        let remaining = Math.floor((expires - Date.now()) / 1000);
+        const countdown = setInterval(() => {
+          remaining--;
+          if (remaining > 0) {
+            statusText.textContent = `QR disponível — expira em ${remaining}s`;
+          } else {
+            statusText.textContent = 'QR expirado — atualize';
+            clearInterval(countdown);
+          }
+        }, 1000);
+
+        // Check for new QR periodically (Baileys refreshes it)
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(fetchQR, 5000);
+
+      } catch (err) {
+        placeholder.textContent = 'Erro ao conectar com o gateway';
+        placeholder.style.color = '#f85149';
+        errorMsg.textContent = `Gateway offline? Verifique se está rodando em localhost:3000`;
+        errorMsg.style.display = 'block';
+      }
+    }
+
+    // Initial load
+    checkHealth();
+    fetchQR();
+
+    // Re-check health every 10s
+    setInterval(checkHealth, 10000);
+  </script>
+</body>
+</html>
