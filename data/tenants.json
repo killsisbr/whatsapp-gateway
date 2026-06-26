@@ -12,5 +12,23 @@
       "qr"
     ],
     "createdAt": "2026-06-21T19:10:42.546Z"
+  },
+  {
+    "id": "1d2f7f53-6133-49cd-a45e-b5114dff42d0",
+    "userId": "f1210e0b-8cab-4965-aaf8-d4e0f2d2ad0b",
+    "name": "killsis",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-21T20:11:30.070Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
   }
 ]

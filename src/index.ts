@@ -7,6 +7,7 @@ import { WhatsAppManager } from "./whatsapp.js";
 import { AuthManager, authRoutes, authMiddleware } from "./auth.js";
 import { tenantRoutes } from "./routes/tenants.js";
 import { webhookRoutes } from "./routes/webhooks.js";
+import { pairingRoutes } from "./routes/pairing.js";
 import { Store } from "./store.js";
 import "./types.js";
 
@@ -135,6 +136,26 @@ app.get("/api/status", async (req, res) => {
 });
 
 app.use("/api/webhook", webhookRoutes(wh));
+
+// --- Pairing Code (código de 8 dígitos, sem QR) ---
+app.post("/api/pairing", async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return res.status(400).json({ success: false, error: "Missing field: phoneNumber" });
+    }
+    const wa = await getLegacyWa();
+    const clean = phoneNumber.replace(/[^0-9]/g, "");
+    const code = await wa.requestPairingCode(clean);
+    res.json({
+      success: true,
+      pairingCode: code,
+      instructions: `Digite o código ${code} no WhatsApp: Configurações > Dispositivos conectados > Conectar dispositivo`,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // --- Health ---
 app.get("/health", (_req, res) => {

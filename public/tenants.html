@@ -4,109 +4,306 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp Gateway — Tenants</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #ff3e00;
+      --primary-rgb: 255, 62, 0;
+      --secondary: #00f2ff;
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --card: #111111;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --border: #1a1a1a;
+      --danger: #ff0000;
+      --success: #00ff88;
+      --warning: #fbbf24;
+      --brutal-border: 4px solid var(--border);
+      --shadow-hard: 12px 12px 0px var(--border);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
     body {
-      background: #0a0e17;
-      color: #e0e6ed;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 0% 0%, rgba(var(--primary-rgb), 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.05) 0%, transparent 50%);
+      color: var(--text);
       min-height: 100vh;
       padding: 2rem;
     }
-    .container { max-width: 800px; margin: 0 auto; }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
-    h1 { font-size: 1.75rem; color: #f9fafb; }
-    .header-actions { display: flex; gap: 0.75rem; }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0.6rem 1.2rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       cursor: pointer;
-      border: none;
+      border: 4px solid transparent;
       text-decoration: none;
       transition: all 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
     }
-    .btn-primary { background: #3b82f6; color: white; }
-    .btn-primary:hover { background: #2563eb; }
-    .btn-secondary { background: #1f2937; color: #e0e6ed; border: 1px solid #374151; }
-    .btn-secondary:hover { background: #374151; }
-    .btn-danger { background: #7f1d1d; color: #fca5a5; }
-    .btn-danger:hover { background: #991b1b; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: transparent;
+      color: var(--primary);
+      transform: translate(-4px, -4px);
+      box-shadow: 8px 8px 0 var(--primary);
+    }
+
+    .btn-secondary {
+      background: #222;
+      color: var(--text);
+      border-color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: transparent;
+      color: #fff;
+      transform: translate(-4px, -4px);
+      box-shadow: 8px 8px 0 #333;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #000;
+      border-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: transparent;
+      color: var(--danger);
+      transform: translate(-4px, -4px);
+      box-shadow: 8px 8px 0 var(--danger);
+    }
+
+    .btn-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+    }
+
+    .health-bar {
+      background: var(--card);
+      border: var(--brutal-border);
+      padding: 1rem 1.25rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Space Grotesk', monospace;
+      margin-bottom: 1.5rem;
+    }
+
+    .health-bar span {
+      color: var(--success);
+    }
+
     .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
+      background: var(--card);
+      border: var(--brutal-border);
       padding: 1.5rem;
       margin-bottom: 1rem;
       display: flex;
       align-items: center;
       gap: 1rem;
     }
+
     .tenant-status {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      border-radius: 0;
       flex-shrink: 0;
+      border: 2px solid #000;
     }
-    .tenant-status.connected { background: #34d399; box-shadow: 0 0 8px #34d399; }
-    .tenant-status.qr_ready { background: #fbbf24; }
-    .tenant-status.connecting { background: #60a5fa; animation: pulse 1.5s ease-in-out infinite; }
-    .tenant-status.disconnected { background: #4b5563; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .tenant-status.connected {
+      background: var(--success);
+      box-shadow: 0 0 16px var(--success);
+    }
+
+    .tenant-status.qr_ready {
+      background: var(--warning);
+      box-shadow: 0 0 16px var(--warning);
+    }
+
+    .tenant-status.connecting {
+      background: #3b82f6;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .tenant-status.disconnected {
+      background: #4b5563;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
     .tenant-info { flex: 1; }
-    .tenant-name { font-weight: 700; font-size: 1rem; color: #f3f4f6; }
-    .tenant-meta { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
-    .tenant-phone { color: #34d399; font-weight: 600; font-size: 0.875rem; }
-    .tenant-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .tenant-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tenant-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      font-weight: 600;
+    }
+
+    .tenant-phone {
+      color: var(--success);
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      font-family: 'Space Grotesk', monospace;
+    }
+
+    .tenant-stats {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      font-weight: 700;
+    }
+
+    .tenant-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
     .empty {
       text-align: center;
       padding: 4rem 2rem;
-      color: #6b7280;
+      color: var(--text-muted);
+      background: var(--card);
+      border: var(--brutal-border);
     }
-    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+    }
+
     .modal-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: flex; align-items: center; justify-content: center;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       z-index: 100;
     }
-    .modal { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 2rem; width: 100%; max-width: 400px; }
-    .modal h2 { margin-bottom: 1.5rem; color: #f9fafb; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.4rem; }
-    .form-group input { width: 100%; padding: 0.6rem 0.8rem; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #e0e6ed; font-size: 0.9rem; }
-    .form-group input:focus { outline: none; border-color: #3b82f6; }
-    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
-    .health-bar {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin-bottom: 1.5rem;
-      font-family: monospace;
+
+    .modal {
+      background: var(--card);
+      border: var(--brutal-border);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 450px;
     }
-    .health-bar span { color: #34d399; }
+
+    .modal h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 1rem;
+      background: #000;
+      border: 2px solid var(--border);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📱 WhatsApp Gateway — Tenants</h1>
+      <h1>WhatsApp Gateway</h1>
       <div class="header-actions">
-        <a href="/stats" class="btn btn-secondary" style="text-decoration:none;align-items:center;display:inline-flex;gap:0.4rem;padding:0.6rem 1.2rem;align-self:center;">📊 Estatísticas</a>
+        <a href="/stats" class="btn btn-secondary" style="text-decoration:none;">📊 Estatísticas</a>
         <button class="btn btn-primary" onclick="openNewModal()">+ Novo Tenant</button>
-        <button class="btn btn-secondary" onclick="logout()" style="margin-left:0.5rem">🚪 Sair</button>
+        <button class="btn btn-secondary" onclick="logout()">Sair</button>
       </div>
     </header>
 
@@ -136,7 +333,6 @@
   </div>
 
   <script>
-    // Auth check
     (function() {
       const token = localStorage.getItem('wha_token');
       if (!token) {
@@ -149,7 +345,7 @@
       const res = await fetch('/health');
       const h = await res.json();
       document.getElementById('health-bar').innerHTML =
-        `Gateway: <span>online</span> | Tenants: <span>${h.tenants}</span> | Uptime: <span>${Math.floor(h.uptime)}s</span>`;
+        `Gateway: <span>ONLINE</span> | Tenants: <span>${h.tenants}</span> | Uptime: <span>${Math.floor(h.uptime)}s</span>`;
     }
 
     async function loadTenants() {
@@ -160,7 +356,7 @@
       const list = document.getElementById('tenants-list');
 
       if (!tenants.length) {
-        list.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><p>Nenhum tenant ainda. Clique em "+ Novo Tenant" para começar.</p></div>';
+        list.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><p>Nenhum tenant. Clique em "+ Novo Tenant" para começar.</p></div>';
         return;
       }
 
@@ -173,23 +369,22 @@
               ID: ${t.id.slice(0,8)}... · Criado: ${new Date(t.createdAt).toLocaleString('pt-BR')}
             </div>
             ${t.phone ? `<div class="tenant-phone">✓ ${t.phone}</div>` : ''}
-            <div class="tenant-stats" id="stats-${t.id}" style="font-size:0.75rem;color:#6b7280;margin-top:4px;"></div>
+            <div class="tenant-stats" id="stats-${t.id}"></div>
           </div>
           <div class="tenant-actions">
-            <a href="/tenants/${t.id}/scan" class="btn btn-secondary">📱 Scan QR</a>
-            ${t.state !== 'connected' ? `<button class="btn btn-primary" onclick="startTenant('${t.id}')">▶ Iniciar</button>` : ''}
-            <button class="btn btn-danger" onclick="deleteTenant('${t.id}')">✕</button>
+            <a href="/tenants/${t.id}/scan" class="btn btn-secondary btn-small">📱 Scan QR</a>
+            ${t.state !== 'connected' ? `<button class="btn btn-primary btn-small" onclick="startTenant('${t.id}')">▶ Iniciar</button>` : ''}
+            <button class="btn btn-danger btn-small" onclick="deleteTenant('${t.id}')">✕</button>
           </div>
         </div>
       `).join('');
 
-      // fetch stats async (non-blocking)
       tenants.forEach(t => {
         fetch(`/api/tenants/${t.id}/stats`)
           .then(r => r.json())
           .then(s => {
             document.getElementById('stats-' + t.id).innerHTML =
-              `📤${s.messagesSent||0} 📥${s.messagesReceived||0} ✗${s.messagesFailed||0} 📷${s.qrScans||0}`;
+              `📤 ${s.messagesSent||0}  📥 ${s.messagesReceived||0}  ✗ ${s.messagesFailed||0}  📷 ${s.qrScans||0}`;
           })
           .catch(() => {});
       });
@@ -248,7 +443,6 @@
       document.getElementById('modal-backdrop').style.display = 'none';
     }
 
-    // Init
     loadTenants();
     loadHealth();
     setInterval(loadTenants, 10000);

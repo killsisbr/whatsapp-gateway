@@ -4,48 +4,81 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp Gateway — Scan QR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #ff3e00;
+      --primary-rgb: 255, 62, 0;
+      --secondary: #00f2ff;
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --card: #111111;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --border: #1a1a1a;
+      --danger: #ff0000;
+      --success: #00ff88;
+      --brutal-border: 4px solid var(--border);
+      --shadow-hard: 12px 12px 0px var(--border);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+    html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 0% 0%, rgba(var(--primary-rgb), 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.05) 0%, transparent 50%);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 32px;
     }
 
     h1 {
-      font-size: 1.5rem;
-      color: #58a6ff;
-      letter-spacing: -0.5px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
-      color: #8b949e;
+      color: var(--text-muted);
       font-size: 0.9rem;
-      margin-top: -16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: -20px;
     }
 
     .card {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 16px;
-      padding: 40px;
+      background: var(--card);
+      border: var(--brutal-border);
+      box-shadow: var(--shadow-hard);
+      padding: 48px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      gap: 24px;
+      max-width: 440px;
+      width: 90%;
     }
 
     .qr-container {
-      background: white;
-      border-radius: 12px;
+      background: #000;
+      border: 2px solid var(--border);
       padding: 16px;
     }
 
@@ -58,19 +91,25 @@
     .status {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.95rem;
+      gap: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 18px;
+      background: #0a0a0a;
+      border: 2px solid var(--border);
     }
 
     .dot {
       width: 10px;
       height: 10px;
-      border-radius: 50%;
-      background: #f0883e;
+      border-radius: 0;
+      background: #f59e0b;
       animation: pulse 1.5s infinite;
     }
 
-    .dot.connected { background: #3fb950; animation: none; }
+    .dot.connected { background: var(--success); animation: none; box-shadow: 0 0 16px var(--success); }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -78,63 +117,113 @@
     }
 
     .phone {
-      font-family: monospace;
-      color: #58a6ff;
+      font-family: 'Space Grotesk', monospace;
+      color: var(--primary);
       font-size: 1.1rem;
+      font-weight: 700;
     }
 
     .instructions {
-      color: #8b949e;
+      color: var(--text-muted);
       font-size: 0.8rem;
       text-align: center;
-      line-height: 1.6;
+      line-height: 1.8;
+      padding: 16px;
+      background: #0a0a0a;
+      border: 2px solid var(--border);
+      font-weight: 600;
     }
 
     .instructions strong {
-      color: #e6edf3;
+      color: var(--text);
+      font-weight: 800;
     }
 
     .api-status {
       position: fixed;
       top: 16px;
       right: 16px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 8px 14px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      padding: 8px 16px;
       font-size: 0.75rem;
-      color: #8b949e;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .api-status .ok { color: #3fb950; }
-    .api-status .error { color: #f85149; }
+    .api-status .ok { color: var(--success); }
+    .api-status .error { color: var(--danger); }
 
     .buttons {
       display: flex;
       gap: 12px;
-      margin-top: 8px;
+      width: 100%;
     }
 
     button {
-      background: #238636;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
+      flex: 1;
+      background: var(--primary);
+      color: #000;
+      border: 4px solid var(--primary);
+      padding: 14px 20px;
       font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
     }
 
-    button:hover { background: #2ea043; }
-    button:disabled { background: #484f58; cursor: not-allowed; }
+    button:hover:not(:disabled) {
+      background: transparent;
+      color: var(--primary);
+      transform: translate(-4px, -4px);
+      box-shadow: 8px 8px 0 var(--primary);
+    }
+
+    button:disabled {
+      background: var(--surface);
+      color: var(--text-muted);
+      border-color: var(--border);
+      cursor: not-allowed;
+    }
+
+    #btn-reload {
+      background: #222;
+      border-color: #333;
+      color: #fff;
+    }
+
+    #btn-reload:hover:not(:disabled) {
+      background: transparent;
+      color: #fff;
+      box-shadow: 8px 8px 0 #333;
+    }
 
     #error-msg {
-      color: #f85149;
+      color: var(--danger);
       font-size: 0.85rem;
+      font-weight: 700;
       text-align: center;
-      max-width: 300px;
+      max-width: 100%;
       display: none;
+      padding: 12px;
+      background: rgba(255, 0, 0, 0.1);
+      border: 2px solid var(--danger);
+    }
+
+    #qr-placeholder {
+      width: 280px;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
     }
   </style>
 </head>
@@ -145,7 +234,7 @@
   </div>
 
   <h1>WhatsApp Gateway</h1>
-  <p class="subtitle">Escaneie o QR Code com o WhatsApp</p>
+  <p class="subtitle">Conecte seu WhatsApp com QR</p>
 
   <div class="card">
     <div class="status">
@@ -155,24 +244,29 @@
 
     <div class="qr-container" id="qr-container">
       <img id="qr-image" src="" alt="QR Code" style="display:none">
-      <div id="qr-placeholder" style="width:280px;height:280px;display:flex;align-items:center;justify-content:center;color:#666;font-size:0.9rem;">
-        Carregando...
-      </div>
+      <div id="qr-placeholder">Carregando...</div>
     </div>
 
     <div id="phone-display" class="phone" style="display:none"></div>
 
-    <p id="error-msg"></p>
+    <div id="error-msg"></div>
 
     <div class="buttons">
-      <button id="btn-refresh" onclick="fetchQR()">🔄 Atualizar QR</button>
-      <button id="btn-reload" onclick="location.reload()">🔁 Recarregar</button>
+      <button id="btn-refresh" onclick="fetchQR()">
+        Atualizar QR
+      </button>
+      <button id="btn-reload" onclick="location.reload()">
+        Recarregar
+      </button>
     </div>
 
-    <p class="instructions">
-      <strong>WhatsApp:</strong> Configurações → Dispositivos vinculados → Linkar dispositivo<br>
-      Ou: Mais opções → Dispositivos vinculados → + → Linkar dispositivo
-    </p>
+    <div class="instructions">
+      <strong>COMO CONECTAR:</strong><br>
+      1. Abra o WhatsApp no celular<br>
+      2. Configurações → Dispositivos vinculados<br>
+      3. Toque em "Linkar novo dispositivo"<br>
+      4. Escaneie o QR code acima
+    </div>
   </div>
 
   <script>
@@ -209,11 +303,10 @@
         const data = await res.json();
 
         if (data.status === 'already_connected') {
-          // Already connected — no QR needed
           placeholder.style.display = 'none';
           img.style.display = 'none';
           dot.classList.add('connected');
-          statusText.textContent = `Conectado`;
+          statusText.textContent = `CONECTADO`;
           phoneDisplay.textContent = data.phone;
           phoneDisplay.style.display = 'block';
           document.getElementById('btn-refresh').disabled = true;
@@ -222,46 +315,40 @@
         }
 
         if (data.status === 'no_qr') {
-          placeholder.textContent = data.message || 'QR ainda não disponível. Tente em alguns segundos.';
+          placeholder.textContent = data.message || 'QR não disponível';
           return;
         }
 
-        // QR ready
         placeholder.style.display = 'none';
         img.src = data.qr;
         img.style.display = 'block';
-        statusText.textContent = 'QR disponível — escaneie em 60s';
+        statusText.textContent = 'QR DISPONÍVEL — 60s';
 
-        // Countdown
         const expires = data.expires;
         let remaining = Math.floor((expires - Date.now()) / 1000);
         const countdown = setInterval(() => {
           remaining--;
           if (remaining > 0) {
-            statusText.textContent = `QR disponível — expira em ${remaining}s`;
+            statusText.textContent = `QR DISPONÍVEL — ${remaining}s`;
           } else {
-            statusText.textContent = 'QR expirado — atualize';
+            statusText.textContent = 'QR EXPIRADO';
             clearInterval(countdown);
           }
         }, 1000);
 
-        // Check for new QR periodically (Baileys refreshes it)
         if (pollInterval) clearInterval(pollInterval);
         pollInterval = setInterval(fetchQR, 5000);
 
       } catch (err) {
-        placeholder.textContent = 'Erro ao conectar com o gateway';
-        placeholder.style.color = '#f85149';
-        errorMsg.textContent = `Gateway offline? Verifique se está rodando em localhost:3000`;
+        placeholder.textContent = 'ERRO DE CONEXÃO';
+        placeholder.style.color = var(--danger);
+        errorMsg.textContent = `GATEWAY OFFLINE?`;
         errorMsg.style.display = 'block';
       }
     }
 
-    // Initial load
     checkHealth();
     fetchQR();
-
-    // Re-check health every 10s
     setInterval(checkHealth, 10000);
   </script>
 </body>

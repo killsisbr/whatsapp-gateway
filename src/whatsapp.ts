@@ -51,6 +51,13 @@ export class WhatsAppManager extends EventEmitter {
     return this.sock;
   }
 
+  /** Request a pairing code (8-digit) instead of QR scan */
+  async requestPairingCode(phoneNumber: string): Promise<string> {
+    if (!this.sock) throw new Error("Socket not initialized — call start() first");
+    const code = await this.sock.requestPairingCode(phoneNumber);
+    return code;
+  }
+
   async start() {
     this.setState("connecting");
     const { version, isLatest } = await fetchLatestBaileysVersion();
