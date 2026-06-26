@@ -1,0 +1,13 @@
+node_modules/
+dist/
+session/
+data/
+*.log
+logs/
+coverage/
+.env
+.env.local
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

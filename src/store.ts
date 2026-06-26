@@ -3,13 +3,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = join(__dirname, "..", "data");
-
-function ensureDataDir() {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
+const DEFAULT_DATA_DIR = join(__dirname, "..", "data");
 
 export interface StoredUser {
   id: string;
@@ -64,49 +58,60 @@ export interface StoreData {
   apiKeys: StoredApiKey[];
 }
 
-function loadJson<T>(filename: string, fallback: T): T {
-  ensureDataDir();
-  const path = join(DATA_DIR, filename);
-  if (!existsSync(path)) return fallback;
-  try {
-    const raw = readFileSync(path, "utf-8");
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-function saveJson(filename: string, data: unknown) {
-  ensureDataDir();
-  const path = join(DATA_DIR, filename);
-  writeFileSync(path, JSON.stringify(data, null, 2), "utf-8");
-}
-
 export class Store {
+  private DATA_DIR: string;
+
+  constructor(dataDir?: string) {
+    this.DATA_DIR = dataDir || DEFAULT_DATA_DIR;
+  }
+
+  private ensureDataDir() {
+    if (!existsSync(this.DATA_DIR)) {
+      mkdirSync(this.DATA_DIR, { recursive: true });
+    }
+  }
+
+  private loadJson<T>(filename: string, fallback: T): T {
+    this.ensureDataDir();
+    const path = join(this.DATA_DIR, filename);
+    if (!existsSync(path)) return fallback;
+    try {
+      const raw = readFileSync(path, "utf-8");
+      return JSON.parse(raw) as T;
+    } catch {
+      return fallback;
+    }
+  }
+
+  private saveJson(filename: string, data: unknown) {
+    this.ensureDataDir();
+    const path = join(this.DATA_DIR, filename);
+    writeFileSync(path, JSON.stringify(data, null, 2), "utf-8");
+  }
   // --- Users ---
   loadUsers(): StoredUser[] {
-    return loadJson("users.json", []);
+    return this.loadJson("users.json", []);
   }
 
   saveUsers(users: StoredUser[]) {
-    saveJson("users.json", users);
+    this.saveJson("users.json", users);
   }
 
   // --- Tenants ---
   loadTenants(): StoredTenant[] {
-    return loadJson("tenants.json", []);
+    return this.loadJson("tenants.json", []);
   }
 
   saveTenants(tenants: StoredTenant[]) {
-    saveJson("tenants.json", tenants);
+    this.saveJson("tenants.json", tenants);
   }
 
   // --- API Keys ---
   loadApiKeys(): StoredApiKey[] {
-    return loadJson("apikeys.json", []);
+    return this.loadJson("apikeys.json", []);
   }
 
   saveApiKeys(apiKeys: StoredApiKey[]) {
-    saveJson("apikeys.json", apiKeys);
+    this.saveJson("apikeys.json", apiKeys);
   }
 }

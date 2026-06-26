@@ -1,0 +1,46 @@
+services:
+  whatsapp-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-gateway
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-whatsapp-gateway-secret-change-me-in-production}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - gateway-data:/app/data
+      - gateway-session:/app/session
+      - gateway-logs:/app/logs
+    networks:
+      - gateway-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+volumes:
+  gateway-data:
+    driver: local
+  gateway-session:
+    driver: local
+  gateway-logs:
+    driver: local
+
+networks:
+  gateway-network:
+    driver: bridge

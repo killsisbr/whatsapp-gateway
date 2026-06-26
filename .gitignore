@@ -1,6 +1,10 @@
 node_modules/
 dist/
 .env
+.env.local
 session/
+data/
 *.db
 logs/
+coverage/
+*.log

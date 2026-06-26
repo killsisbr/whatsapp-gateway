@@ -1,0 +1,226 @@
+openapi: 3.0.3
+info:
+  title: WhatsApp Gateway API
+  description: API multi-tenant para envio e recebimento de mensagens WhatsApp via Baileys
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+
+  /api/auth/register:
+    post:
+      summary: Register new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+
+  /api/auth/login:
+    post:
+      summary: Login
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+
+  /api/tenants:
+    get:
+      summary: List tenants
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tenant' }
+
+  /api/tenants/register:
+    post:
+      summary: Create tenant
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterTenantRequest' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tenant' }
+
+  /api/tenants/{id}:
+    get:
+      summary: Get tenant
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tenant' }
+
+  /api/tenants/{id}/qr:
+    get:
+      summary: Get QR code
+      tags: [Tenants]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QRResponse' }
+
+  /api/tenants/{id}/send:
+    post:
+      summary: Send message
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendMessageRequest' }
+      responses:
+        '200':
+          description: Message sent
+
+  /api/webhooks:
+    post:
+      summary: Register webhook
+      tags: [Webhooks]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterWebhookRequest' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        ok: { type: boolean }
+        state: { type: string }
+        tenants: { type: integer }
+        uptime: { type: number }
+        queueSize: { type: integer }
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+            email: { type: string }
+
+    Tenant:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        state: { type: string, enum: [disconnected, connecting, qr_ready, connected] }
+        phone: { type: string, nullable: true }
+        apiKey: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    RegisterTenantRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+
+    QRResponse:
+      type: object
+      properties:
+        qr: { type: string }
+        expires: { type: integer }
+        status: { type: string }
+
+    SendMessageRequest:
+      type: object
+      required: [to, type, content]
+      properties:
+        to: { type: string }
+        type: { type: string, enum: [text, image, document] }
+        content: { type: string }
+        caption: { type: string, nullable: true }
+
+    RegisterWebhookRequest:
+      type: object
+      required: [projectId, url]
+      properties:
+        projectId: { type: string }
+        url: { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }

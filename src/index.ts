@@ -9,6 +9,11 @@ import { tenantRoutes } from "./routes/tenants.js";
 import { webhookRoutes } from "./routes/webhooks.js";
 import { pairingRoutes } from "./routes/pairing.js";
 import { Store } from "./store.js";
+import { logger } from "./logger.js";
+import { tenantRateLimit, authRateLimit } from "./middleware/rateLimit.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { webhookQueue } from "./queue.js";
+import { readFileSync } from "node:fs";
 import "./types.js";
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -16,6 +21,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Rate limiting
+app.use("/api/auth", authRateLimit);
+app.use("/api", tenantRateLimit);
 
 const PUBLIC_DIR = path.resolve(process.cwd(), "public");
 app.use(express.static(PUBLIC_DIR));
@@ -157,9 +166,49 @@ app.post("/api/pairing", async (req, res) => {
   }
 });
 
-// --- Health ---
+// --- Health (detalhado) ---
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, tenants: tm.count(), uptime: process.uptime() });
+  const mem = process.memoryUsage();
+  const queueStatus = webhookQueue.getQueueStatus();
+  res.json({
+    ok: true,
+    version: "1.0.0",
+    state: tm.count() > 0 ? "operational" : "idle",
+    tenants: tm.count(),
+    uptime: process.uptime(),
+    queueSize: queueStatus.total,
+    memory: {
+      heapUsed: Math.round(mem.heapUsed / 1024 / 1024) + "MB",
+      heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + "MB",
+      rss: Math.round(mem.rss / 1024 / 1024) + "MB",
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// --- API Docs (OpenAPI) ---
+app.get("/api/openapi.yaml", (_req, res) => {
+  try {
+    const yaml = readFileSync(new URL("./openapi.yaml", import.meta.url), "utf-8");
+    res.setHeader("Content-Type", "text/yaml");
+    res.send(yaml);
+  } catch {
+    res.status(404).json({ error: "OpenAPI spec not found" });
+  }
+});
+
+app.get("/docs", (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>WhatsApp Gateway — API Docs</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>SwaggerUIBundle({ url: "/api/openapi.yaml", dom_id: "#swagger-ui" })</script>
+</body>
+</html>`);
 });
 
 // --- Stats ---
@@ -199,14 +248,19 @@ function createTenantWa(tenantId: string) {
   return wa;
 }
 
+// Error handling
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 async function main() {
   app.listen(PORT, () => {
-    console.log(`\n🔌 WhatsApp Gateway running on http://localhost:${PORT}`);
-    console.log(`   ${"POST /api/auth/register".padEnd(35)} Criar conta`);
-    console.log(`   ${"POST /api/auth/login".padEnd(35)} Login`);
-    console.log(`   ${"POST /api/tenants/register".padEnd(35)} Criar tenant (auth)`);
-    console.log(`   ${"GET /tenants".padEnd(35)} Painel web`);
+    logger.info(`WhatsApp Gateway running on http://localhost:${PORT}`);
+    logger.info(`  POST /api/auth/register — Criar conta`);
+    logger.info(`  POST /api/auth/login — Login`);
+    logger.info(`  POST /api/tenants/register — Criar tenant (auth)`);
+    logger.info(`  GET /tenants — Painel web`);
+    logger.info(`Docs: http://localhost:${PORT}/docs`);
   });
 }
 
-main().catch(err => { console.error("Fatal:", err); process.exit(1); });
+main().catch(err => { logger.error(`Fatal: ${err}`); process.exit(1); });

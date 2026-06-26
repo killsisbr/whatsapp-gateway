@@ -30,5 +30,884 @@
     "messagesReceived": 0,
     "messagesFailed": 0,
     "qrScans": 0
+  },
+  {
+    "id": "4a59407e-21b1-4cb0-85eb-c3efd0623b60",
+    "userId": "test-user-123",
+    "name": "My Client",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.150Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "5c5d3aa5-c6d4-449d-b909-9f3147d5b35c",
+    "userId": "test-user-123",
+    "name": "Client A",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.163Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "a61e6bf6-f3c5-4568-8cff-07f517be1c02",
+    "userId": "test-user-123",
+    "name": "Client B",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.164Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "bd5794a4-cd62-46ff-a92e-ece3796ff22c",
+    "userId": "user-1",
+    "name": "Tenant 1",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.166Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "20f2d564-3fe1-45d8-abed-45be350fdda4",
+    "userId": "user-1",
+    "name": "Tenant 2",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.166Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "e0c0bcef-a234-4394-b6e4-0e56156fe08c",
+    "userId": "user-2",
+    "name": "Tenant 3",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.167Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "5e686ff8-8ded-4a79-bcbd-a351b1906d95",
+    "userId": "user-1",
+    "name": "Tenant 1",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.169Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "76aa3f7e-bae5-418c-b870-d2918bd785b7",
+    "userId": "user-1",
+    "name": "Tenant 2",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.170Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "5d3739ef-cd01-4c68-a809-9fded754ab1b",
+    "userId": "user-2",
+    "name": "Tenant 3",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.171Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "16bc8c03-093f-4caf-8211-d0503639ff5a",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.172Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "85d5d387-13f5-4904-9314-deac859861ec",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.174Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "a68e9b36-f231-41d1-bb1d-9b5583f88361",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.178Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "26eb5d9f-4732-4de4-9d13-4b32effb4e9b",
+    "userId": "other-user",
+    "name": "Not To Remove",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.181Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "39cbfa7f-3339-44aa-92d2-19d2390febf3",
+    "userId": "test-user-123",
+    "name": "State Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.183Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "cb43d437-86ee-424a-916a-4c174265c315",
+    "userId": "test-user-123",
+    "name": "Webhook Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status"
+    ],
+    "createdAt": "2026-06-26T03:00:17.185Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0,
+    "webhookUrl": "https://example.com/webhook"
+  },
+  {
+    "id": "860fa149-9932-424a-a94b-e8728b6b0255",
+    "userId": "other-user",
+    "name": "Webhook Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:17.187Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "c19e1169-5810-4c09-ac74-ab9adca1dc4d",
+    "userId": "1074de75-ea05-4a46-9a3b-85389a27334c",
+    "name": "My First Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:20.906Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "64fed260-9abb-4c24-9bc7-61c7096cba84",
+    "userId": "test-user-123",
+    "name": "My Client",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.512Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "abd96824-90f8-48af-b880-4756b957e638",
+    "userId": "test-user-123",
+    "name": "Client A",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.525Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "f75cbd98-59d0-403f-a45f-732a7aa93bc0",
+    "userId": "test-user-123",
+    "name": "Client B",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.526Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "e2a3c6af-d48d-42da-a729-a31b26883ce1",
+    "userId": "user-1",
+    "name": "Tenant 1",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.528Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "04b86250-406a-46d7-8874-453cc543976a",
+    "userId": "user-1",
+    "name": "Tenant 2",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.528Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "d7e32e5f-40f3-4334-9844-e20568f314ca",
+    "userId": "user-2",
+    "name": "Tenant 3",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.529Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "d6bce3a9-d7b6-45a3-b47b-20349bd88fa8",
+    "userId": "user-1",
+    "name": "Tenant 1",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.535Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "6884e761-b808-432b-aae7-76cb81c59d6c",
+    "userId": "user-1",
+    "name": "Tenant 2",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.536Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "eba9a78c-1c91-4fbc-89ba-586b8d3ba56e",
+    "userId": "user-2",
+    "name": "Tenant 3",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.537Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "8e02b19c-4f9c-4fb5-b862-88468d2e45c4",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.539Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "4ef33238-1ee7-414b-87e9-b97f104963df",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.541Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "e243bff3-a6f7-4669-9602-02898b0308f8",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.542Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "a7d15011-f67b-4ac9-8a05-f9126157f207",
+    "userId": "other-user",
+    "name": "Not To Remove",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.546Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "91b306d9-ad58-4c53-a169-ba892f69e8ad",
+    "userId": "test-user-123",
+    "name": "State Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.547Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "672981ba-95dd-4b3d-9a31-32708292026e",
+    "userId": "test-user-123",
+    "name": "Webhook Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status"
+    ],
+    "createdAt": "2026-06-26T03:00:28.550Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0,
+    "webhookUrl": "https://example.com/webhook"
+  },
+  {
+    "id": "e6acdefc-fe7e-4534-891e-adba9f8894b6",
+    "userId": "other-user",
+    "name": "Webhook Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:28.553Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "2cbdb110-2010-471f-9573-9dcf0368afe9",
+    "userId": "test-user-123",
+    "name": "My Client",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.816Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "6f856656-58f4-46fb-9264-ffb57d4f2790",
+    "userId": "test-user-123",
+    "name": "Client A",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.829Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "26f892c7-6b67-4f13-9aff-cd27b95db35d",
+    "userId": "test-user-123",
+    "name": "Client B",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.829Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "2f6b3675-4cae-4cbd-b7d1-b90eb93cf767",
+    "userId": "user-1",
+    "name": "Tenant 1",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.831Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "498601a4-82b6-4b40-bbde-ae83f2e4a406",
+    "userId": "user-1",
+    "name": "Tenant 2",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.832Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "11e3f05f-dfb6-4922-8b92-9855c54ba004",
+    "userId": "user-2",
+    "name": "Tenant 3",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.833Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "eea8f703-6bf8-45c5-9aa8-24e5444dc24c",
+    "userId": "user-1",
+    "name": "Tenant 1",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.839Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "0cfbe8d6-6946-4fb2-aaca-9dd05e84a827",
+    "userId": "user-1",
+    "name": "Tenant 2",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.840Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "8660d578-1394-4ed7-8241-345b7ef27df2",
+    "userId": "user-2",
+    "name": "Tenant 3",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.841Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "a02b0e06-6701-4d70-b912-db87975a6251",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.843Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "a1ee2ff2-bd55-4dab-95ba-8e6ad30b5645",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.845Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "fd4b2012-6d64-492b-991a-996937730f0c",
+    "userId": "test-user-123",
+    "name": "Get Test Tenant",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.847Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "84f5eb6d-10e6-4285-bdd8-9b7f3e7b2b7d",
+    "userId": "other-user",
+    "name": "Not To Remove",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.851Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "c4d6921c-21b9-4591-a1c7-99b020c494bd",
+    "userId": "test-user-123",
+    "name": "State Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.852Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
+  },
+  {
+    "id": "6e2eaf68-ca41-4922-97e1-5a16fb7c7a02",
+    "userId": "test-user-123",
+    "name": "Webhook Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status"
+    ],
+    "createdAt": "2026-06-26T03:00:35.855Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0,
+    "webhookUrl": "https://example.com/webhook"
+  },
+  {
+    "id": "08c61246-3d37-45cd-9221-11b0e996acfe",
+    "userId": "other-user",
+    "name": "Webhook Test",
+    "connected": false,
+    "state": "disconnected",
+    "webhookEvents": [
+      "message",
+      "status",
+      "disconnect",
+      "qr"
+    ],
+    "createdAt": "2026-06-26T03:00:35.858Z",
+    "messagesSent": 0,
+    "messagesReceived": 0,
+    "messagesFailed": 0,
+    "qrScans": 0
   }
 ]
