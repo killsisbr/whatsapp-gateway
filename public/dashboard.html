@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Gateway Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #0f3460;
+    }
+    h1 { font-size: 28px; color: #00d9ff; }
+    .status-badge {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .status-online { background: #00c853; color: #fff; }
+    .status-offline { background: #ff5252; color: #fff; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+    .card h2 {
+      font-size: 14px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 15px;
+    }
+    .metric {
+      font-size: 42px;
+      font-weight: bold;
+      color: #00d9ff;
+    }
+    .metric.small { font-size: 28px; }
+    .metric-unit { font-size: 16px; color: #888; }
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      margin-top: 15px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .logs {
+      background: #0a0a15;
+      border-radius: 10px;
+      padding: 15px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .log-info { color: #00d9ff; }
+    .log-success { color: #00ff88; }
+    .log-error { color: #ff5252; }
+    .log-warn { color: #ffc107; }
+    .refresh-btn {
+      background: #0f3460;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .refresh-btn:hover { background: #1a4a7a; }
+    .uptime { font-size: 16px; color: #888; margin-top: 10px; }
+    .chart-container {
+      height: 200px;
+      margin-top: 20px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .pulsing { animation: pulse 2s infinite; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚪 WhatsApp Gateway Dashboard</h1>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <span id="statusBadge" class="status-badge status-offline">OFFLINE</span>
+        <button class="refresh-btn" onclick="refreshData()">🔄 Atualizar</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Status -->
+      <div class="card">
+        <h2>Status</h2>
+        <div class="metric" id="state">--</div>
+        <div class="uptime" id="uptime">Uptime: --</div>
+      </div>
+
+      <!-- Tenants -->
+      <div class="card">
+        <h2>Tenants</h2>
+        <div class="metric" id="tenants">0</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="tenantsBar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Queue -->
+      <div class="card">
+        <h2>Webhooks na Fila</h2>
+        <div class="metric" id="queue">0</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="queueBar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Memória -->
+      <div class="card">
+        <h2>Memória Heap</h2>
+        <div class="metric small" id="heap">0 MB</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="heapBar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Requests -->
+      <div class="card">
+        <h2>Requests (24h)</h2>
+        <div class="metric" id="requests">0</div>
+      </div>
+
+      <!-- Webhooks -->
+      <div class="card">
+        <h2>Webhooks Enviados</h2>
+        <div class="metric" id="webhooks">0</div>
+      </div>
+
+      <!-- Falhas -->
+      <div class="card">
+        <h2>Falhas (24h)</h2>
+        <div class="metric" id="failures" style="color: #ff5252;">0</div>
+      </div>
+
+      <!-- RSS Memory -->
+      <div class="card">
+        <h2>Memória RSS</h2>
+        <div class="metric small" id="rss">0 MB</div>
+      </div>
+    </div>
+
+    <!-- Logs Recentes -->
+    <div class="card">
+      <h2>📋 Logs Recentes (Audit)</h2>
+      <div class="logs" id="logsContainer">
+        <div class="log-entry log-info">Aguardando dados...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let metricsHistory = [];
+
+    async function refreshData() {
+      try {
+        // Health check
+        const healthRes = await fetch(`${API_BASE}/health`);
+        const health = await healthRes.json();
+
+        // Metrics
+        const metricsRes = await fetch(`${API_BASE}/metrics`);
+        const metricsText = await metricsRes.text();
+        parseMetrics(metricsText);
+
+        // Update UI
+        updateDashboard(health);
+
+      } catch (err) {
+        setOffline();
+        console.error('Erro ao buscar dados:', err);
+      }
+    }
+
+    function updateDashboard(health) {
+      // Status
+      const statusBadge = document.getElementById('statusBadge');
+      if (health.ok || health.state) {
+        statusBadge.className = 'status-badge status-online';
+        statusBadge.textContent = 'ONLINE';
+        document.getElementById('state').textContent = health.state?.toUpperCase() || 'OPERATIONAL';
+        document.getElementById('uptime').textContent = `Uptime: ${formatUptime(health.uptime)}`;
+      } else {
+        setOffline();
+      }
+
+      // Tenants
+      const tenants = health.tenants?.total || 0;
+      document.getElementById('tenants').textContent = tenants;
+      document.getElementById('tenantsBar').style.width = `${Math.min(tenants * 10, 100)}%`;
+
+      // Queue
+      const queue = health.queue?.pending || 0;
+      document.getElementById('queue').textContent = queue;
+      document.getElementById('queueBar').style.width = `${Math.min(queue * 2, 100)}%`;
+
+      // Memory
+      const heapUsed = parseFloat(health.memory?.heapUsed || '0');
+      document.getElementById('heap').textContent = `${heapUsed.toFixed(1)} MB`;
+      const heapPercent = (heapUsed / 512) * 100;
+      document.getElementById('heapBar').style.width = `${heapPercent}%`;
+
+      const rss = parseFloat(health.memory?.rss || '0');
+      document.getElementById('rss').textContent = `${rss.toFixed(1)} MB`;
+    }
+
+    function parseMetrics(text) {
+      const lines = text.split('\n');
+      const metrics = {};
+
+      lines.forEach(line => {
+        if (!line.startsWith('#') && line.includes('}')) {
+          const parts = line.split(' ');
+          if (parts.length >= 2) {
+            const value = parseFloat(parts[parts.length - 1]);
+            metrics[parts[0]] = value;
+          }
+        }
+      });
+
+      // Update metrics
+      const requests = (metrics['gateway_requests_total'] || 0);
+      document.getElementById('requests').textContent = formatNumber(requests);
+
+      const webhooks = (metrics['gateway_webhooks_total'] || 0);
+      document.getElementById('webhooks').textContent = formatNumber(webhooks);
+
+      const failures = (metrics['gateway_webhook_failures_total'] || 0);
+      document.getElementById('failures').textContent = formatNumber(failures);
+
+      // Store for chart
+      metricsHistory.push({
+        time: new Date(),
+        requests,
+        webhooks,
+        failures
+      });
+      if (metricsHistory.length > 50) metricsHistory.shift();
+    }
+
+    function setOffline() {
+      const statusBadge = document.getElementById('statusBadge');
+      statusBadge.className = 'status-badge status-offline';
+      statusBadge.textContent = 'OFFLINE';
+      document.getElementById('state').textContent = '--';
+      document.getElementById('uptime').textContent = 'Uptime: --';
+    }
+
+    function formatUptime(seconds) {
+      if (!seconds) return '--';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      const hours = Math.floor(mins / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) return `${days}d ${hours % 24}h ${mins % 60}m`;
+      if (hours > 0) return `${hours}h ${mins % 60}m ${secs}s`;
+      if (mins > 0) return `${mins}m ${secs}s`;
+      return `${secs}s`;
+    }
+
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+      return num.toString();
+    }
+
+    // Auto-refresh a cada 5 segundos
+    setInterval(refreshData, 5000);
+
+    // Initial load
+    refreshData();
+  </script>
+</body>
+</html>

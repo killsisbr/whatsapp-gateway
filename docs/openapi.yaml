@@ -1,0 +1,384 @@
+openapi: 3.0.3
+info:
+  title: WhatsApp Gateway API
+  description: |
+    API profissional para envio e recebimento de mensagens WhatsApp.
+
+    ## Autenticação
+    Todas as requisições requerem o header `X-API-Key` com a API key do tenant.
+
+    ## Rate Limiting
+    - 100 requisições/minuto por tenant
+    - Circuit breaker por domínio de webhook
+
+    ## Webhooks
+    Webhooks usam HMAC-SHA256 para assinatura. Valide com o header `X-Webhook-Signature`.
+  version: 1.0.0
+  contact:
+    name: WhatsApp Gateway Support
+
+servers:
+  - url: http://localhost:3000
+    description: Development
+  - url: https://gateway.example.com
+    description: Production
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key fornecida após scan do QR code
+
+  schemas:
+    # Request/Response comuns
+    SendMessageRequest:
+      type: object
+      required: [to, text]
+      properties:
+        to:
+          type: string
+          example: "5541999999999"
+          description: Número WhatsApp com código do país
+        text:
+          type: string
+          example: "Olá do WhatsApp Gateway!"
+        linkPreview:
+          type: boolean
+          default: true
+          description: Gerar preview de links
+
+    SendMessageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        messageId:
+          type: string
+          example: "3EB071E8EB4E61CE6CE512"
+        error:
+          type: string
+
+    WebhookRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://meu-app.com/webhook"
+        events:
+          type: array
+          items:
+            type: string
+            enum: [message, sent, failed, status]
+          example: ["message", "sent"]
+
+    SessionRequest:
+      type: object
+      properties:
+        qrId:
+          type: string
+          description: ID opcional para identificar o QR
+
+    SessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        sessionToken:
+          type: string
+          description: Token para confirmar sessão (válido por 60s)
+        qrBase64:
+          type: string
+          description: QR code em base64
+        qrTerminal:
+          type: string
+          description: QR code em ASCII para terminal
+        expiresAt:
+          type: integer
+          description: Timestamp de expiração
+        expiresIn:
+          type: integer
+          description: Milissegundos até expirar
+
+    SessionCredentials:
+      type: object
+      properties:
+        success:
+          type: boolean
+        credentials:
+          type: object
+          properties:
+            tenantId:
+              type: string
+            apiKey:
+              type: string
+              description: ⚠️ MOSTRADA APENAS UMA VEZ!
+            sessionPassword:
+              type: string
+            encryptedApiKey:
+              type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        version:
+          type: string
+        state:
+          type: string
+          enum: [idle, operational, connected]
+        tenants:
+          type: object
+          properties:
+            total:
+              type: integer
+        uptime:
+          type: number
+          description: Uptime em segundos
+        queue:
+          type: object
+          properties:
+            pending:
+              type: integer
+            byAttempts:
+              type: object
+        memory:
+          type: object
+          properties:
+            heapUsed:
+              type: string
+            heapTotal:
+              type: string
+            rss:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: API key inválida ou ausente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Invalid API key"
+
+    RateLimited:
+      description: Rate limit excedido
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Segundos para tentar novamente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Rate limit exceeded. Try again in 60s"
+
+paths:
+  /api/session/request:
+    post:
+      tags: [Session]
+      summary: Solicitar QR Code
+      description: |
+        Gera um session token (válido por 60s, uso único) e retorna QR code.
+        Após escanear, use `/api/session/confirm` para obter credenciais.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionRequest'
+      responses:
+        200:
+          description: QR code gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        400:
+          description: Sessão já ativa para este tenant
+
+  /api/session/confirm:
+    post:
+      tags: [Session]
+      summary: Confirmar QR Scan
+      description: |
+        Confirma que o QR foi escaneado e gera credenciais.
+        A API key é mostrada **apenas uma vez** - guarde-a!
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionToken]
+              properties:
+                sessionToken:
+                  type: string
+      responses:
+        200:
+          description: Credenciais geradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionCredentials'
+        400:
+          description: Session token inválido ou expirado
+        404:
+          description: QR code ainda não escaneado
+
+  /api/session/rotate-key:
+    post:
+      tags: [Session]
+      summary: Rotacionar API Key
+      description: |
+        Gera nova API key para o tenant. Requer PIN de confirmação.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pin]
+              properties:
+                pin:
+                  type: string
+                  description: PIN definido no registro do tenant
+      responses:
+        200:
+          description: Nova API key gerada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  newApiKey:
+                    type: string
+        401:
+          description: PIN inválido
+
+  /api/send:
+    post:
+      tags: [Messages]
+      summary: Enviar Mensagem
+      description: Envia mensagem de texto para um número WhatsApp
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        200:
+          description: Mensagem enviada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMessageResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        429:
+          $ref: '#/components/responses/RateLimited'
+
+  /api/webhook:
+    post:
+      tags: [Webhooks]
+      summary: Registrar Webhook
+      description: |
+        Registra URL para receber eventos do WhatsApp.
+        Webhooks são assinados com HMAC-SHA256.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRequest'
+      responses:
+        200:
+          description: Webhook registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  webhookId:
+                    type: string
+
+  /health:
+    get:
+      tags: [System]
+      summary: Health Check
+      description: Retorna status detalhado do gateway
+      responses:
+        200:
+          description: Gateway saudável
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      tags: [System]
+      summary: Prometheus Metrics
+      description: |
+        Métricas no formato Prometheus.
+        Use com Grafana ou outro scraper compatible.
+      responses:
+        200:
+          description: Métricas Prometheus
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP gateway_requests_total Total HTTP requests
+                # TYPE gateway_requests_total counter
+                gateway_requests_total{method="POST",path="/api/send",status="200"} 156
+                gateway_requests_total{method="POST",path="/api/send",status="500"} 2
+
+                # HELP gateway_webhooks_total Total webhooks dispatched
+                # TYPE gateway_webhooks_total counter
+                gateway_webhooks_total{event="message"} 89
+
+                # HELP gateway_queue_size Current webhook queue size
+                # TYPE gateway_queue_size gauge
+                gateway_queue_size 3
+
+tags:
+  - name: Session
+    description: Gerenciamento de sessão WhatsApp (QR code)
+  - name: Messages
+    description: Envio de mensagens
+  - name: Webhooks
+    description: Configuração de webhooks
+  - name: System
+    description: Endpoints de sistema (health, metrics)
