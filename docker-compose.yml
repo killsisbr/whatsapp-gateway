@@ -12,6 +12,9 @@ services:
       - PORT=3000
       - JWT_SECRET=${JWT_SECRET:-whatsapp-gateway-secret-change-me-in-production}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
     volumes:
       - gateway-data:/app/data
       - gateway-session:/app/session
@@ -33,12 +36,31 @@ services:
           cpus: '0.25'
           memory: 128M
 
+  redis:
+    image: redis:7-alpine
+    container_name: whatsapp-gateway-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - gateway-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 volumes:
   gateway-data:
     driver: local
   gateway-session:
     driver: local
   gateway-logs:
+    driver: local
+  redis-data:
     driver: local
 
 networks:

@@ -106,6 +106,15 @@ export class WhatsAppManager extends EventEmitter {
         } else {
           this.setState("disconnected");
           this.emit("disconnected", String(reason));
+          try {
+            const fs = await import("node:fs");
+            if (fs.existsSync(this.sessionDir)) {
+              fs.rmSync(this.sessionDir, { recursive: true, force: true });
+              this.logger.info(`Cleared session credentials folder: ${this.sessionDir}`);
+            }
+          } catch (err: any) {
+            this.logger.error(`Error clearing credentials folder: ${err.message}`);
+          }
         }
       }
     });

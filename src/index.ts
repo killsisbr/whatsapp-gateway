@@ -8,11 +8,19 @@ import { AuthManager, authRoutes, authMiddleware } from "./auth.js";
 import { tenantRoutes } from "./routes/tenants.js";
 import { webhookRoutes } from "./routes/webhooks.js";
 import { pairingRoutes } from "./routes/pairing.js";
+import { sessionRoutes } from "./routes/session.js";
+import { deviceRoutes } from "./routes/devices.js";
+import { ipWhitelistRoutes } from "./routes/ipWhitelist.js";
+import { pluginRoutes } from "./routes/plugins.js";
 import { Store } from "./store.js";
 import { logger } from "./logger.js";
+import { auditLogger } from "./audit.js";
 import { tenantRateLimit, authRateLimit } from "./middleware/rateLimit.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { createIpWhitelistMiddleware } from "./middleware/ipWhitelist.js";
 import { webhookQueue } from "./queue.js";
+import { bullmqQueue } from "./queue-bullmq.js";
+import { metrics } from "./metrics.js";
 import { readFileSync } from "node:fs";
 import "./types.js";
 
@@ -34,6 +42,7 @@ app.get("/tenants", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "tenants.h
 app.get("/stats", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "stats.html")));
 app.get("/login", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
 app.get("/tenants/:id/scan", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "tenant-scan.html")));
+app.get("/dashboard", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "dashboard.html")));
 
 // --- Persistência ---
 const store = new Store();
@@ -47,6 +56,18 @@ const tm = new TenantManager(store);
 const wh = tm.getWebhookManager();
 const mw = authMiddleware(am);
 
+// IP Whitelist middleware
+const ipWhitelistMiddleware = createIpWhitelistMiddleware(tm);
+app.use(ipWhitelistMiddleware);
+
+// --- Plugin System ---
+import { pluginManager } from "./plugins.js";
+import { createEchoBotPlugin } from "./plugins/echo-bot.js";
+
+// Registra plugin de exemplo (Echo Bot)
+pluginManager.register(createEchoBotPlugin());
+logger.info("Plugin system initialized with Echo Bot");
+
 // API Key middleware — validates X-API-Key header if present
 function apiKeyOrAuth(req: any, res: any, next: any) {
   const apiKey = req.headers["x-api-key"] as string;
@@ -54,6 +75,7 @@ function apiKeyOrAuth(req: any, res: any, next: any) {
     const result = tm.validateApiKey(apiKey);
     if (result) {
       req.userId = result.tenantId; // reuse same field for simplicity
+      req.isApiKey = true;
       return next();
     }
     return res.status(401).json({ error: "Invalid API key" });
@@ -62,9 +84,10 @@ function apiKeyOrAuth(req: any, res: any, next: any) {
 }
 
 // Tenant API (auth-protected)
-app.post("/api/tenants/:id/start", mw, async (req, res) => {
+app.post("/api/tenants/:id/start", apiKeyOrAuth, async (req, res) => {
   const userId = (req as any).userId as string;
-  const tenant = tm.getForUser(userId, req.params.id);
+  const isApiKey = (req as any).isApiKey;
+  const tenant = isApiKey ? tm.get(req.params.id) : tm.getForUser(userId, req.params.id);
   if (!tenant) return res.status(404).json({ error: "tenant not found" });
   let wa = tm.getWhatsAppManager(req.params.id);
   if (wa) return res.json({ state: wa.state, message: "already started" });
@@ -73,20 +96,36 @@ app.post("/api/tenants/:id/start", mw, async (req, res) => {
   res.json({ state: wa.state, message: "started" });
 });
 
-app.get("/api/tenants/:id/qr", mw, (req, res) => {
-  if (!tm.getForUser((req as any).userId as string, req.params.id)) return res.status(404).json({ error: "tenant not found" });
-  const wa = tm.getWhatsAppManager(req.params.id);
-  if (!wa) return res.status(404).json({ error: "tenant not initialized" });
+app.get("/api/tenants/:id/qr", apiKeyOrAuth, async (req, res) => {
+  const userId = (req as any).userId as string;
+  const isApiKey = (req as any).isApiKey;
+  const tenant = isApiKey ? tm.get(req.params.id) : tm.getForUser(userId, req.params.id);
+  if (!tenant) return res.status(404).json({ error: "tenant not found" });
+  
+  let wa = tm.getWhatsAppManager(req.params.id);
+  if (!wa) {
+    wa = createTenantWa(req.params.id);
+    await wa.start();
+    // Wait a brief moment to allow the first QR code to be generated
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+  
   const qr = (wa as any).qrString || (wa as any)._qrString;
   if (!qr) return res.status(404).json({ error: "no QR available yet" });
   res.json({ qr, base64: qr });
 });
 
-app.get("/api/tenants/:id/status", mw, (req, res) => {
-  const tenant = tm.getForUser((req as any).userId as string, req.params.id);
+app.get("/api/tenants/:id/status", apiKeyOrAuth, async (req, res) => {
+  const userId = (req as any).userId as string;
+  const isApiKey = (req as any).isApiKey;
+  const tenant = isApiKey ? tm.get(req.params.id) : tm.getForUser(userId, req.params.id);
   if (!tenant) return res.status(404).json({ error: "tenant not found" });
-  const wa = tm.getWhatsAppManager(req.params.id);
-  if (!wa) return res.status(404).json({ error: "tenant not initialized" });
+  
+  let wa = tm.getWhatsAppManager(req.params.id);
+  if (!wa) {
+    // If not initialized, return disconnected status rather than 404
+    return res.json({ connected: false, state: "disconnected", phone: null, lastSeen: null, qrPending: false });
+  }
   res.json({ connected: wa.connected, state: wa.state, phone: wa.phone, lastSeen: wa.lastSeen, qrPending: wa.qrPending });
 });
 
@@ -146,6 +185,23 @@ app.get("/api/status", async (req, res) => {
 
 app.use("/api/webhook", webhookRoutes(wh));
 
+// --- Session Token Routes (QR com token único, expira em 60s) ---
+// NOTA: legacyWa é o WhatsAppManager single-tenant. Para multi-tenant, usar /api/tenants/:id/...
+const legacyWaForSession = new WhatsAppManager();
+legacyWaForSession.on("message", (msg) => wh.dispatch("message", msg));
+legacyWaForSession.on("connected", (phone) => {
+  wh.dispatch("status", { connected: true, phone });
+  logger.info("Legacy WhatsApp connected", { phone });
+});
+legacyWaForSession.on("disconnected", (reason) => wh.dispatch("disconnect", { reason }));
+legacyWaForSession.on("qr", () => wh.dispatch("qr", { message: "New QR" }));
+legacyWaForSession.start().catch((err) => logger.error("Failed to start legacy WhatsApp", { err }));
+
+app.use("/api/session", sessionRoutes(legacyWaForSession));
+app.use("/api/devices", deviceRoutes(tm));
+app.use("/api/ip-whitelist", ipWhitelistRoutes(tm));
+app.use("/api/plugins", pluginRoutes());
+
 // --- Pairing Code (código de 8 dígitos, sem QR) ---
 app.post("/api/pairing", async (req, res) => {
   try {
@@ -174,9 +230,14 @@ app.get("/health", (_req, res) => {
     ok: true,
     version: "1.0.0",
     state: tm.count() > 0 ? "operational" : "idle",
-    tenants: tm.count(),
+    tenants: {
+      total: tm.count(),
+    },
     uptime: process.uptime(),
-    queueSize: queueStatus.total,
+    queue: {
+      pending: queueStatus.total,
+      byAttempts: queueStatus.byAttempts,
+    },
     memory: {
       heapUsed: Math.round(mem.heapUsed / 1024 / 1024) + "MB",
       heapTotal: Math.round(mem.heapTotal / 1024 / 1024) + "MB",
@@ -184,6 +245,16 @@ app.get("/health", (_req, res) => {
     },
     timestamp: new Date().toISOString(),
   });
+});
+
+// --- Prometheus Metrics ---
+app.get("/metrics", async (req, res) => {
+  // Atualiza métricas da queue
+  const queueStatus = await webhookQueue.getQueueStatus();
+  metrics.incCounter('queue_size', {}, queueStatus.total);
+
+  res.set('Content-Type', 'text/plain');
+  res.send(metrics.generateMetrics());
 });
 
 // --- API Docs (OpenAPI) ---
@@ -253,14 +324,42 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 async function main() {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     logger.info(`WhatsApp Gateway running on http://localhost:${PORT}`);
     logger.info(`  POST /api/auth/register — Criar conta`);
     logger.info(`  POST /api/auth/login — Login`);
     logger.info(`  POST /api/tenants/register — Criar tenant (auth)`);
     logger.info(`  GET /tenants — Painel web`);
+    logger.info(`  GET  /metrics — Prometheus metrics`);
     logger.info(`Docs: http://localhost:${PORT}/docs`);
   });
+
+  // Inicializa BullMQ (se Redis disponível)
+  await bullmqQueue.init();
+
+  // Graceful shutdown
+  const shutdown = async (signal: string) => {
+    logger.info(`${signal} recebido — iniciando graceful shutdown`);
+
+    // 1. Parar servidor de aceitar novas conexões
+    server.close(async () => {
+      logger.info('Servidor HTTP fechado');
+
+      // 2. Salvar estado da fila
+      await bullmqQueue.close();
+      logger.info('Fila BullMQ fechada');
+
+      // 3. Flush de audit logs
+      (auditLogger as any).flush();
+      logger.info('Audit logs persistidos');
+
+      logger.info('Graceful shutdown completo');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 main().catch(err => { logger.error(`Fatal: ${err}`); process.exit(1); });

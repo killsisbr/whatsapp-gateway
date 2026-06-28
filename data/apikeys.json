@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "live",
+    "tenantId": "live",
+    "name": "SAAS-WEB Key",
+    "key": "dngkw5jCh1BaacKRf3tVwrPDomXCqg==",
+    "createdAt": "2026-06-27T19:24:14.143Z",
+    "requestCount": 428,
+    "encryptedKey": "dngkw5jCh1BaacKRf3tVwrPDomXCqg==",
+    "lastUsed": "2026-06-28T03:28:48.807Z"
+  }
+]

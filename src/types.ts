@@ -14,7 +14,7 @@ export interface WebhookPayload {
   event: WebhookEvent;
   project?: string;
   data: unknown;
-  timestamp: string;
+  timestamp: string | number;  // Aceita string (ISO) ou number (Unix ms)
 }
 
 export interface QrResponse {

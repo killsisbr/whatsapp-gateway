@@ -1,4 +1,5 @@
 import { logger, logError } from './logger.js';
+import { CircuitBreaker } from './circuitBreaker.js';
 
 export interface QueuedWebhook {
   id: string;
@@ -10,6 +11,21 @@ export interface QueuedWebhook {
   maxAttempts: number;
   nextRetry: number;
   createdAt: number;
+}
+
+// Circuit breakers por domínio
+const circuitBreakers: Map<string, CircuitBreaker> = new Map();
+
+function getCircuitBreaker(url: string): CircuitBreaker {
+  const domain = new URL(url).hostname;
+  if (!circuitBreakers.has(domain)) {
+    circuitBreakers.set(domain, new CircuitBreaker(async () => {}, {
+      threshold: 5,
+      timeout: 60000, // 1 minuto
+      halfOpenRequests: 2,
+    }));
+  }
+  return circuitBreakers.get(domain)!;
 }
 
 class WebhookQueue {
@@ -59,26 +75,44 @@ class WebhookQueue {
     job.attempts++;
     logger.info('Retrying webhook', { jobId: job.id, attempt: job.attempts, url: job.url });
 
+    // Verifica circuit breaker para este domínio
+    const breaker = getCircuitBreaker(job.url);
+    const stats = breaker.getStats();
+
+    if (stats.state === 'OPEN') {
+      logger.warn('Circuit breaker OPEN, postponing webhook', {
+        jobId: job.id,
+        url: job.url,
+        ...stats
+      });
+      // Reagenda para depois
+      job.nextRetry = Date.now() + 60000;
+      this.queue.set(job.id, job);
+      return;
+    }
+
     try {
-      const response = await fetch(job.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: job.event, payload: job.payload }),
+      // Executa com circuit breaker
+      await breaker.call(async () => {
+        const response = await fetch(job.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: job.event, payload: job.payload }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
       });
 
-      if (response.ok) {
-        logger.info('Webhook delivered successfully', { jobId: job.id, status: response.status });
-        this.queue.delete(job.id);
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      logger.info('Webhook delivered successfully', { jobId: job.id, status: 'OK' });
+      this.queue.delete(job.id);
     } catch (error) {
       logError('WebhookQueue', error, { jobId: job.id, attempt: job.attempts });
 
       if (job.attempts >= job.maxAttempts) {
         logger.error('Webhook failed permanently, moving to dead letter', { jobId: job.id });
         this.queue.delete(job.id);
-        // Could be persisted to a dead letter store here
       } else {
         const delayIndex = Math.min(job.attempts - 1, this.retryIntervals.length - 1);
         job.nextRetry = Date.now() + this.retryIntervals[delayIndex];
@@ -97,6 +131,18 @@ class WebhookQueue {
       byAttempts[job.attempts] = (byAttempts[job.attempts] || 0) + 1;
     }
     return { total: this.queue.size, byAttempts };
+  }
+
+  async flush(): Promise<void> {
+    // Força processamento imediato de todos os webhooks pendentes
+    logger.info('Flushing webhook queue', { pending: this.queue.size });
+    const jobs = Array.from(this.queue.values());
+    for (const job of jobs) {
+      job.nextRetry = Date.now(); // Tenta entregar agora
+      this.queue.set(job.id, job);
+    }
+    await this.processQueue();
+    logger.info('Webhook queue flushed', { remaining: this.queue.size });
   }
 }
 

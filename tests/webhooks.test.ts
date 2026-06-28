@@ -89,13 +89,13 @@ describe('WebhookManager', () => {
       await wh.dispatch('message', { from: '123', text: 'hello' });
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://example.com/webhook',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
+      const callArgs = (global.fetch as vi.Mock).mock.calls[0];
+      expect(callArgs[0]).toBe('https://example.com/webhook');
+      expect(callArgs[1]).toMatchObject({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: expect.stringContaining('"event":"message"'),
+      });
 
       global.fetch = originalFetch;
     });
